@@ -11,6 +11,7 @@ weak model is "retry", not "subtly wrong chart".
 """
 import argparse
 import json
+import re
 import os
 import subprocess
 import sys
@@ -73,8 +74,13 @@ WRITING:
 - eyebrow: 2-4 words of context, e.g. the topic or period.
 - insight.text: one sentence saying what the data MEANS. No restating numbers.
 - Never invent a statistic that is not in the brief or clearly implied by it.
-  If the brief gives no numbers, use plainly illustrative ones and say so in
-  content.source.
+- NEVER attribute data to a real organisation, report or dataset. Inventing a
+  citation like "Statista, Q4 2023" is the single worst thing you can do here.
+  If the numbers are illustrative, content.source must say exactly that and
+  name nobody.
+- If the brief asks for a chart, graph, trend or breakdown, you MUST pick a
+  template that has a chart (chart-insight or chart-split) and fill
+  content.chart. A cover or quote is not an acceptable answer to "make a chart".
 
 BACKGROUND -- pick honestly:
   mesh ..... default. Deterministic, instant, always on-brand.
@@ -95,6 +101,23 @@ ink (near-black, editorial -- good with quote and cover).
 
 CANVAS: landscape for decks, portrait for LinkedIn/Instagram feed, square, story.
 """
+
+
+# A brief can ask for a chart in many words; if it does, a chartless
+# template is a wrong answer no schema can catch on its own.
+CHART_INTENT = re.compile(
+    r"\b(chart|graph|plot|visuali[sz]\w*|trend|growth|breakdown|distribution|"
+    r"over time|compare|comparison|by (?:segment|region|category|year|quarter))\b",
+    re.I,
+)
+
+
+def wants_chart(brief):
+    return bool(CHART_INTENT.search(brief))
+
+
+def brief_has_numbers(brief):
+    return bool(re.search(r"\d", brief))
 
 
 def build_prompt(brief, cat, want_canvas, want_theme):
@@ -166,9 +189,22 @@ def main():
 
             check = node(["src/validate.js"], stdin=out)
             result = json.loads(check.stdout or '{"ok":false,"issues":["no validator output"]}')
+
+            if result["ok"] and wants_chart(args.brief) and not result["design"]["content"].get("chart"):
+                result = {"ok": False, "issues": [
+                    'the brief asks for a chart, but you chose template '
+                    f'"{result["design"]["template"]}" with no content.chart. '
+                    "Use chart-insight or chart-split and fill content.chart."
+                ]}
+
             if result["ok"]:
+                design = result["design"]
+                # The brief supplied no numbers, so anything plotted was
+                # invented. Never let invented data carry a citation.
+                if not brief_has_numbers(args.brief):
+                    design["content"]["source"] = "Illustrative data — not from a real source"
                 # Render the REPAIRED design, not the raw model output.
-                design_json = json.dumps(result["design"], indent=2)
+                design_json = json.dumps(design, indent=2)
                 break
             last = result["issues"]
             for i in last:

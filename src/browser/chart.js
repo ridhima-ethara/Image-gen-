@@ -204,14 +204,29 @@
       axisLabel: { ...axisCommon(true).axisLabel, formatter: v => fmt(v, spec.unit) },
     };
 
+    /* A single series gets no legend -- correctly, one colour needs no key.
+       But that also drops the only place the MEASURE was named ("Sales, $bn"),
+       so the reader is left with bare numbers. Caption the value axis instead:
+       it names what is plotted without adding a legend box. */
+    if (spec.series.length === 1 && spec.series[0].name) {
+      val.name = spec.series[0].name;
+      val.nameLocation = 'end';
+      val.nameGap = px(18);
+      val.nameTextStyle = { ...baseText(21, tok('--text-muted'), 500), align: horizontal ? 'right' : 'left' };
+    }
+
     return {
       animation: false,
       backgroundColor: 'transparent',
       color: colors,
       textStyle: { fontFamily: 'Inter, sans-serif' },
       grid: {
-        left: px(6), right: px(56), top: px(spec.series.length > 1 ? 62 : 24), bottom: px(6),
-        containLabel: true,   /* the axis band is inside the box, never clipped */
+        left: px(6), right: px(56), bottom: px(6),
+        /* Reserve headroom for whichever chrome sits above the plot --
+           a legend, or the value-axis caption. containLabel covers the
+           axis BAND but not either of these, so they clip without it. */
+        top: px(spec.series.length > 1 ? 62 : (val.name ? 52 : 24)),
+        containLabel: true,
       },
       legend: legendFor(spec),
       /* One axis. Always. Two measures of different scale get two charts. */
