@@ -203,6 +203,16 @@ function retarget(d) {
   }
   /* Same in reverse: a cover with a chart in it should show the chart. */
   if (d.template === 'cover' && c.chart) d.template = 'chart-insight';
+
+  /* Templates with an exact item count: the model routinely picks
+     `comparison` for three things. The item count is the honest signal
+     of what the content actually is, so follow it rather than reject. */
+  const n = Array.isArray(c.items) ? c.items.length : 0;
+  if (d.template === 'comparison' && n !== 2) d.template = n === 3 ? 'cards-3up' : 'list-insight';
+  if (d.template === 'cards-3up' && n !== 3) d.template = n === 2 ? 'comparison' : 'list-insight';
+  if (d.template === 'stat-hero' && Array.isArray(c.stats) && c.stats.length > 1) d.template = 'kpi-grid';
+  if (d.template === 'kpi-grid' && Array.isArray(c.stats) && c.stats.length === 1) d.template = 'stat-hero';
+
   return d;
 }
 

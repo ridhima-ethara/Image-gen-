@@ -68,6 +68,25 @@ CHART RULES -- these are enforced; violating them fails the render:
 - Two numbers are NOT a chart -- use comparison or kpi-grid.
 - With 2+ series, set focusSeries to the index of the one the story is about.
 
+THE MOST COMMON MISTAKE -- read this twice.
+"categories" are the things on the axis. "series" is the MEASURE being plotted.
+They are not the same list. One number per category means ONE series.
+
+Comparing spend across AWS, Azure and GCP -- CORRECT:
+  "categories": ["AWS", "Azure", "GCP"],
+  "series": [{"name": "Annual spend ($M)", "data": [42, 31, 18]}]
+
+The SAME data, WRONG -- three series named after the categories, nine numbers
+where there are only three facts:
+  "categories": ["AWS", "Azure", "GCP"],
+  "series": [{"name": "AWS", "data": [42, 0, 0]},
+             {"name": "Azure", "data": [0, 31, 0]},
+             {"name": "GCP", "data": [0, 0, 18]}]
+
+Use more than one series ONLY when every category genuinely has more than one
+number -- e.g. categories are years and series are ["Training", "Inference"].
+Name each series after the MEASURE, never after a category.
+
 WRITING:
 - title: a claim, not a label. "Enterprise adoption keeps pulling away",
   not "Adoption by segment". Under 70 characters.
@@ -153,7 +172,8 @@ def call_ollama(model, system, user, schema, temperature):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("brief", nargs="?", help="what the image should say")
+    ap.add_argument("brief", nargs="*", help="what the image should say (quotes optional)")
+    ap.add_argument("--brief-file", help="read the brief from a text file instead")
     ap.add_argument("--model", default=os.environ.get("SMA_MODEL", "qwen2.5:7b"),
                     help="Ollama model for the design JSON (default qwen2.5:7b)")
     ap.add_argument("--canvas", default="landscape", help="landscape|portrait|square|story")
@@ -167,6 +187,32 @@ def main():
     ap.add_argument("--design", help="skip the model; render this design JSON file")
     ap.add_argument("--save-design", help="write the generated design JSON here")
     args = ap.parse_args()
+
+    # Accept the brief three ways, because quoting a long prompt into a
+    # shell is the most annoying step in the whole pipeline:
+    #   1. as arguments, quoted or not
+    #   2. from a file via --brief-file
+    #   3. typed or pasted at an interactive prompt
+    if args.brief_file:
+        args.brief = open(args.brief_file).read().strip()
+    elif args.brief:
+        args.brief = " ".join(args.brief)
+    elif not args.design and sys.stdin.isatty():
+        print("Describe the image you want. Press Enter twice when done.\n", file=sys.stderr)
+        lines = []
+        while True:
+            try:
+                line = input()
+            except EOFError:
+                break
+            if not line and lines:
+                break
+            if line:
+                lines.append(line)
+        args.brief = " ".join(lines).strip()
+        print("", file=sys.stderr)
+    elif not args.design:
+        args.brief = sys.stdin.read().strip()
 
     if args.design:
         design_json = open(args.design).read()
