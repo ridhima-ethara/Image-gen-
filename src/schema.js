@@ -158,7 +158,160 @@ const REQUIRED = {
   'table':        ['table'],
 };
 
-export function validateDesign(raw) {
+
+/* ============================================================
+   Repair pass.
+
+   Small models fail the schema in two very different ways:
+
+     - COSMETIC: a strength of 1.4, a hue of 400, a title three
+       characters too long, a stray key. None of these change what
+       the slide MEANS, so rejecting them just burns a retry.
+     - SEMANTIC: series data that doesn't line up with its
+       categories. That one stays a hard error -- silently trimming
+       it would misrepresent the data, which is the exact failure
+       this whole pipeline exists to prevent.
+
+   So we clamp, truncate and strip the first kind, and refuse the
+   second kind.
+   ============================================================ */
+
+const clamp = (v, lo, hi) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : undefined);
+const trunc = (v, n) => (typeof v === 'string' ? v.slice(0, n) : undefined);
+
+const CONTENT_KEYS = ['eyebrow', 'title', 'subtitle', 'chart', 'insight', 'stats', 'items', 'steps', 'quote', 'table', 'source'];
+
+function pick(obj, keys) {
+  if (!obj || typeof obj !== 'object') return obj;
+  const out = {};
+  for (const k of keys) if (obj[k] !== undefined) out[k] = obj[k];
+  return out;
+}
+
+/* If the model picked a chart template but gave us no chart, don't
+   fail -- move it to the archetype its content actually fits. */
+function retarget(d) {
+  const c = d.content || {};
+  const needsChart = d.template === 'chart-insight' || d.template === 'chart-split';
+  if (needsChart && !c.chart) {
+    if (Array.isArray(c.stats) && c.stats.length) d.template = c.stats.length === 1 ? 'stat-hero' : 'kpi-grid';
+    else if (Array.isArray(c.items) && c.items.length >= 2) d.template = c.items.length === 3 ? 'cards-3up' : 'list-insight';
+    else if (Array.isArray(c.steps) && c.steps.length >= 2) d.template = 'timeline';
+    else if (c.table) d.template = 'table';
+    else if (c.quote) d.template = 'quote';
+    else d.template = 'cover';
+  }
+  /* Same in reverse: a cover with a chart in it should show the chart. */
+  if (d.template === 'cover' && c.chart) d.template = 'chart-insight';
+  return d;
+}
+
+export function repairDesign(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const d = pick(raw, ['canvas', 'theme', 'template', 'brand', 'background', 'content']);
+
+  if (d.brand) {
+    d.brand = pick(d.brand, ['logoText', 'accent']);
+    if (d.brand.logoText !== undefined) d.brand.logoText = trunc(d.brand.logoText, 28);
+    if (typeof d.brand.accent === 'string' && !/^#[0-9a-fA-F]{6}$/.test(d.brand.accent)) delete d.brand.accent;
+  }
+
+  if (d.background) {
+    const b = pick(d.background, ['mode', 'prompt', 'seed', 'hue', 'strength']);
+    if (b.strength !== undefined) b.strength = clamp(b.strength, 0, 1);
+    if (b.hue !== undefined) b.hue = clamp(b.hue, 0, 360);
+    if (b.seed !== undefined) b.seed = clamp(Math.round(b.seed), 0, 2 ** 31 - 1);
+    if (b.prompt !== undefined) b.prompt = trunc(b.prompt, 600);
+    for (const k of Object.keys(b)) if (b[k] === undefined) delete b[k];
+    d.background = b;
+  }
+
+  const c = pick(d.content, CONTENT_KEYS);
+  if (c.eyebrow !== undefined) c.eyebrow = trunc(c.eyebrow, 40);
+  if (c.title !== undefined) c.title = trunc(c.title, 90);
+  if (c.subtitle !== undefined) c.subtitle = trunc(c.subtitle, 160);
+  if (c.source !== undefined) c.source = trunc(c.source, 80);
+
+  if (c.insight) {
+    c.insight = pick(c.insight, ['label', 'text']);
+    if (c.insight.label !== undefined) c.insight.label = trunc(c.insight.label, 24);
+    if (c.insight.text !== undefined) c.insight.text = trunc(c.insight.text, 240);
+  }
+
+  if (c.chart) {
+    const ch = pick(c.chart, ['type', 'categories', 'series', 'unit', 'max', 'focusSeries']);
+    if (Array.isArray(ch.categories)) ch.categories = ch.categories.slice(0, 24).map(x => trunc(String(x), 28));
+    if (Array.isArray(ch.series)) {
+      ch.series = ch.series.slice(0, 8).map(s => ({
+        name: trunc(String(s?.name ?? ''), 40),
+        data: Array.isArray(s?.data) ? s.data.map(Number) : [],
+      }));
+    }
+    if (ch.unit !== undefined) ch.unit = trunc(String(ch.unit), 8);
+    if (ch.focusSeries !== undefined && ch.focusSeries !== null) {
+      const fs = clamp(Math.round(ch.focusSeries), 0, Math.max(0, (ch.series?.length ?? 1) - 1));
+      ch.focusSeries = fs === undefined ? null : fs;
+    }
+    /* A donut with several series is a chart-type mistake, not a data
+       one -- a stacked bar says the same thing and is readable. */
+    if (ch.type === 'donut' && Array.isArray(ch.series) && ch.series.length > 1) ch.type = 'stacked-bar';
+    c.chart = ch;
+  }
+
+  if (Array.isArray(c.stats)) {
+    c.stats = c.stats.slice(0, 4).map(s => {
+      const o = pick(s, ['value', 'unit', 'label', 'delta']);
+      if (o.value !== undefined) o.value = trunc(String(o.value), 12);
+      if (o.unit !== undefined) o.unit = trunc(String(o.unit), 8);
+      if (o.label !== undefined) o.label = trunc(String(o.label), 60);
+      if (o.delta) {
+        o.delta = pick(o.delta, ['value', 'direction', 'goodDirection']);
+        if (o.delta.value !== undefined) o.delta.value = trunc(String(o.delta.value), 16);
+      }
+      return o;
+    });
+  }
+
+  if (Array.isArray(c.items)) {
+    c.items = c.items.slice(0, 6).map(i => {
+      const o = pick(i, ['title', 'text', 'value']);
+      if (o.title !== undefined) o.title = trunc(String(o.title), 60);
+      if (o.text !== undefined) o.text = trunc(String(o.text), 180);
+      if (o.value !== undefined) o.value = trunc(String(o.value), 12);
+      return o;
+    });
+  }
+
+  if (Array.isArray(c.steps)) {
+    c.steps = c.steps.slice(0, 5).map(i => {
+      const o = pick(i, ['label', 'title', 'text']);
+      if (o.label !== undefined) o.label = trunc(String(o.label), 16);
+      if (o.title !== undefined) o.title = trunc(String(o.title), 48);
+      if (o.text !== undefined) o.text = trunc(String(o.text), 140);
+      return o;
+    });
+  }
+
+  if (c.quote) {
+    c.quote = pick(c.quote, ['text', 'attribution', 'role']);
+    if (c.quote.text !== undefined) c.quote.text = trunc(String(c.quote.text), 300);
+    if (c.quote.attribution !== undefined) c.quote.attribution = trunc(String(c.quote.attribution), 60);
+    if (c.quote.role !== undefined) c.quote.role = trunc(String(c.quote.role), 80);
+  }
+
+  if (c.table) {
+    const t = pick(c.table, ['columns', 'rows', 'numericColumns']);
+    if (Array.isArray(t.columns)) t.columns = t.columns.slice(0, 6).map(x => trunc(String(x), 28));
+    if (Array.isArray(t.rows)) t.rows = t.rows.slice(0, 10).map(r => (Array.isArray(r) ? r.map(x => trunc(String(x), 32)) : r));
+    c.table = t;
+  }
+
+  d.content = c;
+  return retarget(d);
+}
+
+export function validateDesign(input) {
+  const raw = repairDesign(input);
   const parsed = DesignSchema.safeParse(raw);
   if (!parsed.success) {
     const issues = parsed.error.issues.map(i => `${i.path.join('.') || '<root>'}: ${i.message}`);
@@ -169,6 +322,23 @@ export function validateDesign(raw) {
   if (missing.length) {
     return { ok: false, issues: missing.map(k => `content.${k}: required by template "${d.template}"`) };
   }
+  /* A classic small-model confusion: it emits one series PER CATEGORY,
+     named after the categories, producing an NxN matrix where the data
+     is really a single series of N values. Structurally legal, so only
+     a semantic check catches it -- and it is worth catching, because
+     the resulting chart is confidently wrong. */
+  const ch = d.content.chart;
+  if (ch && ch.series.length > 1) {
+    const cats = new Set(ch.categories.map(c => c.trim().toLowerCase()));
+    const echoed = ch.series.filter(s => cats.has(s.name.trim().toLowerCase())).length;
+    if (echoed >= Math.min(2, ch.series.length) && echoed === ch.series.length) {
+      return {
+        ok: false,
+        issues: ['content.chart: series names repeat the category names. If each category has ONE value, emit a SINGLE series (e.g. name it after the measure, like "Spend" or "Share") with one number per category — do not create one series per category.'],
+      };
+    }
+  }
+
   if (d.template === 'stat-hero' && d.content.stats.length !== 1) {
     return { ok: false, issues: ['content.stats: stat-hero takes exactly one stat (one hero figure per view)'] };
   }

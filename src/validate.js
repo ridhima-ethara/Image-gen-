@@ -28,9 +28,17 @@ try {
 }
 const designs = Array.isArray(raw) ? raw : [raw];
 const issues = [];
+const repaired = [];
 designs.forEach((d, i) => {
   const r = validateDesign(d);
-  if (!r.ok) issues.push(...r.issues.map(x => (designs.length > 1 ? `[${i}] ${x}` : x)));
+  if (r.ok) repaired.push(r.design);
+  else issues.push(...r.issues.map(x => (designs.length > 1 ? `[${i}] ${x}` : x)));
 });
-console.log(JSON.stringify({ ok: !issues.length, issues }));
+/* Hand back the repaired design so the caller renders exactly what
+   passed validation, not the model's raw output. */
+console.log(JSON.stringify({
+  ok: !issues.length,
+  issues,
+  design: issues.length ? null : (Array.isArray(raw) ? repaired : repaired[0]),
+}));
 process.exit(issues.length ? 1 : 0);

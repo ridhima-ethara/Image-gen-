@@ -85,6 +85,11 @@ BACKGROUND -- pick honestly:
 When mode is texture, hero or flux you MUST write background.prompt: an abstract,
 photographic or material description with NO text, people, charts or logos in it.
 
+background.hue is the mesh's base hue in degrees. The chart series start at blue,
+so a warm background fights them: use 195-240 whenever the slide contains a chart.
+Warm hues (20-45) are for chart-free frames only -- cover, quote, list-insight.
+Always set brand.logoText if the brief names an organisation.
+
 THEMES: midnight (dark navy, default), paper (light, best for tables and print),
 ink (near-black, editorial -- good with quote and cover).
 
@@ -135,7 +140,7 @@ def main():
     ap.add_argument("--name", default="slide")
     ap.add_argument("--pdf", action="store_true")
     ap.add_argument("--loose", action="store_true", help="warn on QA problems instead of failing")
-    ap.add_argument("--retries", type=int, default=3)
+    ap.add_argument("--retries", type=int, default=4)
     ap.add_argument("--design", help="skip the model; render this design JSON file")
     ap.add_argument("--save-design", help="write the generated design JSON here")
     args = ap.parse_args()
@@ -162,7 +167,8 @@ def main():
             check = node(["src/validate.js"], stdin=out)
             result = json.loads(check.stdout or '{"ok":false,"issues":["no validator output"]}')
             if result["ok"]:
-                design_json = out
+                # Render the REPAIRED design, not the raw model output.
+                design_json = json.dumps(result["design"], indent=2)
                 break
             last = result["issues"]
             for i in last:
