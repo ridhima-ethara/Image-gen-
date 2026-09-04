@@ -56,6 +56,10 @@ const Chart = z.object({
      that one; the rest are carried by legend + axis. Index is
      0-based; null means "label sensibly by default". */
   focusSeries: z.number().int().min(0).max(7).nullable().default(null),
+  /* Decimal places for the direct value labels. Null = as-typed. Set it
+     when the source quotes a fixed precision: "25%" sitting beside
+     "22.92%" reads as sloppy even when both are exact. */
+  decimals: z.number().int().min(0).max(3).nullable().default(null),
 }).strict()
   .refine(c => c.series.every(s => s.data.length === c.categories.length),
     { message: 'every series.data must be the same length as categories' })
@@ -97,7 +101,7 @@ const Table = z.object({
     { message: 'every row must have exactly columns.length cells' });
 
 const Content = z.object({
-  eyebrow: z.string().max(40).optional(),
+  eyebrow: z.string().max(52).optional(),
   title: z.string().max(90).optional(),
   subtitle: z.string().max(160).optional(),
   chart: Chart.optional(),
@@ -107,7 +111,7 @@ const Content = z.object({
   steps: z.array(Step).min(2).max(5).optional(),
   quote: Quote.optional(),
   table: Table.optional(),
-  source: z.string().max(80).optional(),
+  source: z.string().max(140).optional(),
 }).strict();
 
 const Background = z.object({
@@ -237,10 +241,10 @@ export function repairDesign(raw) {
   }
 
   const c = pick(d.content, CONTENT_KEYS);
-  if (c.eyebrow !== undefined) c.eyebrow = trunc(c.eyebrow, 40);
+  if (c.eyebrow !== undefined) c.eyebrow = trunc(c.eyebrow, 52);
   if (c.title !== undefined) c.title = trunc(c.title, 90);
   if (c.subtitle !== undefined) c.subtitle = trunc(c.subtitle, 160);
-  if (c.source !== undefined) c.source = trunc(c.source, 80);
+  if (c.source !== undefined) c.source = trunc(c.source, 140);
 
   if (c.insight) {
     c.insight = pick(c.insight, ['label', 'text']);
@@ -249,7 +253,7 @@ export function repairDesign(raw) {
   }
 
   if (c.chart) {
-    const ch = pick(c.chart, ['type', 'categories', 'series', 'unit', 'max', 'focusSeries']);
+    const ch = pick(c.chart, ['type', 'categories', 'series', 'unit', 'max', 'focusSeries', 'decimals']);
     if (Array.isArray(ch.categories)) ch.categories = ch.categories.slice(0, 24).map(x => trunc(String(x), 28));
     if (Array.isArray(ch.series)) {
       ch.series = ch.series.slice(0, 8).map(s => ({

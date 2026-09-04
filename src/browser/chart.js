@@ -28,8 +28,10 @@
     return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
   }
 
-  function fmt(v, unit) {
-    const s = Math.abs(v) >= 10000 ? v.toLocaleString('en-US') : String(v);
+  function fmt(v, unit, decimals) {
+    let s;
+    if (decimals !== null && decimals !== undefined) s = Number(v).toFixed(decimals);
+    else s = Math.abs(v) >= 10000 ? v.toLocaleString('en-US') : String(v);
     return unit ? s + unit : s;
   }
 
@@ -52,7 +54,14 @@
      ---------------------------------------------------------- */
   function labelPolicy(spec) {
     const multi = spec.series.length > 1;
-    if (!multi) return spec.categories.length <= 6 ? 'all' : 'extremes';
+    if (!multi) {
+      /* "Never a number on every point" is about dense marks -- a line
+         with 8 points labelled is chaos. A bar chart is different: the
+         value belongs at the tip, and up to 8 bars stay readable. It is
+         also the relief the light palette's sub-3:1 contrast requires. */
+      const isBar = spec.type === 'bar' || spec.type === 'hbar';
+      return spec.categories.length <= (isBar ? 8 : 6) ? 'all' : 'extremes';
+    }
     return spec.focusSeries === null ? 'none' : 'focus';
   }
 
@@ -77,11 +86,11 @@
       position: position,
       distance: px(8),
       ...baseText(22, color, 620),
-      formatter: p => fmt(p.value, spec.unit),
+      formatter: p => fmt(p.value, spec.unit, spec.decimals),
     };
     if (policy === 'extremes') {
       const keep = extremeIdx(spec.series[seriesIdx].data);
-      base.formatter = p => (keep.has(p.dataIndex) ? fmt(p.value, spec.unit) : '');
+      base.formatter = p => (keep.has(p.dataIndex) ? fmt(p.value, spec.unit, spec.decimals) : '');
     }
     return base;
   }
@@ -189,7 +198,7 @@
           show: true,
           ...baseText(22, tok('--text-primary'), 620),
           distance: px(10),
-          formatter: p => fmt(p.value, spec.unit),
+          formatter: p => fmt(p.value, spec.unit, spec.decimals),
         },
         label: { show: false },
         emphasis: { disabled: true },
@@ -221,7 +230,7 @@
       color: colors,
       textStyle: { fontFamily: 'Inter, sans-serif' },
       grid: {
-        left: px(6), right: px(56), bottom: px(6),
+        left: px(16), right: px(56), bottom: px(6),
         /* Reserve headroom for whichever chrome sits above the plot --
            a legend, or the value-axis caption. containLabel covers the
            axis BAND but not either of these, so they clip without it. */

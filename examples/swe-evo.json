@@ -1,0 +1,49 @@
+{
+  "canvas": "landscape",
+  "theme": "midnight",
+  "template": "chart-insight",
+  "brand": {
+    "logoText": "Ethara AI"
+  },
+  "background": {
+    "mode": "mesh",
+    "hue": 214,
+    "seed": 17
+  },
+  "content": {
+    "eyebrow": "SWE-EVO Benchmark",
+    "title": "No model resolves more than a quarter of SWE-EVO",
+    "chart": {
+      "type": "hbar",
+      "unit": "%",
+      "max": 100,
+      "categories": [
+        "gpt-5.4",
+        "kimi-k2p5",
+        "deepseek-v3p2",
+        "gpt-5.2",
+        "glm-4p5",
+        "qwen3-coder-480b-a35b",
+        "gpt-5-mini-08-07",
+        "gpt-5-nano-08-07"
+      ],
+      "series": [
+        {
+          "name": "Tasks resolved (%)",
+          "data": [
+            25.0,
+            22.92,
+            20.83,
+            18.75,
+            16.67,
+            14.58,
+            10.42,
+            4.17
+          ]
+        }
+      ],
+      "decimals": 2
+    },
+    "source": "SWE-EVO, arXiv:2512.18470 (v5), Table 2 \u00b7 OpenHands scaffold \u00b7 48 tasks, avg 21 files and 874 tests per task"
+  }
+}
