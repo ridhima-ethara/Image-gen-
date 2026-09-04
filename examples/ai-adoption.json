@@ -1,0 +1,24 @@
+{
+  "canvas": "landscape",
+  "theme": "midnight",
+  "template": "chart-insight",
+  "brand": { "logoText": "Ethara AI" },
+  "background": { "mode": "mesh", "hue": 214, "seed": 7 },
+  "content": {
+    "eyebrow": "AI Adoption 2026",
+    "title": "Enterprise adoption keeps pulling away",
+    "subtitle": "Share of organisations running AI in production, by segment",
+    "chart": {
+      "type": "bar",
+      "categories": ["Enterprise", "Mid-Market", "SMB"],
+      "series": [{ "name": "In production", "data": [78, 61, 43] }],
+      "unit": "%",
+      "max": 100
+    },
+    "insight": {
+      "label": "Key insight",
+      "text": "Enterprise adoption rose 24 points year on year — nearly double the SMB gain."
+    },
+    "source": "Ethara AI Enterprise Survey, n=1,240"
+  }
+}

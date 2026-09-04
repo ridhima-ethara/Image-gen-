@@ -1,0 +1,185 @@
+[
+  {
+    "canvas": "landscape", "theme": "ink", "template": "cover",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 28, "seed": 3 },
+    "content": {
+      "eyebrow": "State of AI · 2026",
+      "title": "The agent layer is where the margin moved",
+      "subtitle": "What 1,240 enterprises changed about their stack this year",
+      "source": "Ethara AI Enterprise Survey"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "stat-hero",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 214, "seed": 11 },
+    "content": {
+      "eyebrow": "Retention",
+      "title": "Agent-assisted accounts renew differently",
+      "stats": [{ "value": "94.2", "unit": "%", "label": "Net revenue retention across agent-assisted accounts", "delta": { "value": "8.1 pts YoY", "direction": "up", "goodDirection": "up" } }],
+      "insight": { "label": "Why it matters", "text": "Accounts that adopted agents in the first 90 days renewed at nearly twice the rate of those that did not." },
+      "source": "n=1,240 · FY2026"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "kpi-grid",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 198, "seed": 5 },
+    "content": {
+      "eyebrow": "Q4 FY26", "title": "Four numbers that moved",
+      "stats": [
+        { "value": "12.4", "unit": "Cr", "label": "Revenue", "delta": { "value": "18%", "direction": "up", "goodDirection": "up" } },
+        { "value": "78", "unit": "%", "label": "Enterprise adoption", "delta": { "value": "24 pts", "direction": "up", "goodDirection": "up" } },
+        { "value": "4.1", "unit": "%", "label": "Logo churn", "delta": { "value": "0.6 pts", "direction": "up", "goodDirection": "down" } },
+        { "value": "31", "unit": "d", "label": "Time to value", "delta": { "value": "9 d", "direction": "down", "goodDirection": "down" } }
+      ],
+      "source": "Unaudited management accounts"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "chart-split",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 224, "seed": 19 },
+    "content": {
+      "eyebrow": "Cohort view", "title": "Adoption compounds after the first quarter",
+      "chart": {
+        "type": "line", "unit": "%",
+        "categories": ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"],
+        "series": [
+          { "name": "2025 cohort", "data": [12, 19, 27, 34, 39, 43] },
+          { "name": "2026 cohort", "data": [18, 31, 46, 58, 67, 74] }
+        ],
+        "focusSeries": 1, "max": 80
+      },
+      "stats": [{ "value": "74", "unit": "%", "label": "2026 cohort at Q6" }],
+      "insight": { "label": "Key insight", "text": "The newer cohort reaches in two quarters what the previous one took five to reach." },
+      "source": "Cohorts tracked from first paid seat"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "chart-insight",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 262, "seed": 23 },
+    "content": {
+      "eyebrow": "Spend mix", "title": "Inference is eating the infrastructure line",
+      "chart": {
+        "type": "stacked-bar", "unit": "%",
+        "categories": ["FY23", "FY24", "FY25", "FY26"],
+        "series": [
+          { "name": "Training", "data": [62, 51, 38, 24] },
+          { "name": "Inference", "data": [21, 33, 47, 61] },
+          { "name": "Storage", "data": [17, 16, 15, 15] }
+        ],
+        "max": 100
+      },
+      "insight": { "label": "Key insight", "text": "Inference passed training as the largest cost line in FY25 and has not looked back." },
+      "source": "Ethara AI infrastructure benchmark"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "paper", "template": "table",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "solid" },
+    "content": {
+      "eyebrow": "Benchmark", "title": "Time to first value, by deployment path",
+      "table": {
+        "columns": ["Deployment path", "Median days", "P90 days", "Accounts"],
+        "rows": [
+          ["Managed onboarding", "18", "34", "412"],
+          ["Partner-led", "27", "61", "289"],
+          ["Self-serve", "44", "112", "539"]
+        ],
+        "numericColumns": [1, 2, 3]
+      },
+      "insight": { "label": "Read", "text": "Managed onboarding halves the tail, not just the median — the P90 gap is where the churn risk lives." },
+      "source": "n=1,240"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "cards-3up",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 186, "seed": 31 },
+    "content": {
+      "eyebrow": "What changed", "title": "Three shifts behind the numbers",
+      "items": [
+        { "value": "01", "title": "Agents replaced workflows", "text": "Teams stopped wiring steps together and started delegating outcomes." },
+        { "value": "02", "title": "Evaluation moved to production", "text": "Offline benchmarks lost to live traffic as the deciding signal." },
+        { "value": "03", "title": "Budgets left central IT", "text": "Line-of-business owners now hold most of the incremental spend." }
+      ],
+      "source": "Ethara AI Enterprise Survey"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "process-flow",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 208, "seed": 41 },
+    "content": {
+      "eyebrow": "Pipeline", "title": "How a brief becomes a rendered image",
+      "steps": [
+        { "label": "01", "title": "Brief", "text": "Content and data arrive as text" },
+        { "label": "02", "title": "Design JSON", "text": "Schema-constrained, validated, retried" },
+        { "label": "03", "title": "Render", "text": "Fonts, charts and layout in one pass" },
+        { "label": "04", "title": "QA gate", "text": "Fit, contrast and overlap checked" },
+        { "label": "05", "title": "Export", "text": "4K PNG and vector PDF" }
+      ],
+      "source": "smagen"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "ink", "template": "quote",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 40, "seed": 13 },
+    "content": {
+      "eyebrow": "Field note",
+      "quote": {
+        "text": "We stopped asking the model to draw the chart the moment we realised it was guessing at our own numbers.",
+        "attribution": "Head of Platform",
+        "role": "Series C fintech, Bengaluru"
+      }
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "comparison",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 216, "seed": 53 },
+    "content": {
+      "eyebrow": "Before / after", "title": "What the QA gate changed",
+      "items": [
+        { "value": "31%", "title": "Slides needing a manual fix", "text": "Text clipped, labels overlapping, or type sitting on a background it could not be read against." },
+        { "value": "0%", "title": "After the gate", "text": "Overflow, overlap and contrast are checked in-page and corrected before the shot is taken." }
+      ],
+      "source": "200-slide regression set"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "list-insight",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 232, "seed": 61 },
+    "content": {
+      "eyebrow": "Takeaways", "title": "Four things we would tell you before you build this",
+      "items": [
+        { "title": "Never let the image model render a number", "text": "Plausible-looking wrong data is worse than obviously wrong data, because it ships." },
+        { "title": "Templates beat freeform layout", "text": "Constraining the model to archetypes is what makes output consistently on-brand." },
+        { "title": "Supersample, then downsample", "text": "Rendering at 2x and resampling with Lanczos is the cheapest quality win available." },
+        { "title": "Cache the generative step", "text": "A background costs 80 seconds once, and nothing every time after that." }
+      ],
+      "source": "smagen"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "timeline",
+    "brand": { "logoText": "Ethara AI" },
+    "background": { "mode": "mesh", "hue": 192, "seed": 71 },
+    "content": {
+      "eyebrow": "Roadmap", "title": "Where the pipeline goes next",
+      "steps": [
+        { "label": "Now", "title": "Single slide", "text": "One brief, one validated image" },
+        { "label": "Q1", "title": "Deck mode", "text": "A narrative split across many frames" },
+        { "label": "Q2", "title": "Masked inpainting", "text": "Generative texture that never touches type" },
+        { "label": "Q3", "title": "Brand packs", "text": "One token file per client" }
+      ],
+      "source": "smagen"
+    }
+  }
+]

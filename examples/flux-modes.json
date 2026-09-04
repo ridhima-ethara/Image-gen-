@@ -1,0 +1,53 @@
+[
+  {
+    "canvas": "landscape", "theme": "midnight", "template": "chart-insight",
+    "brand": { "logoText": "Ethara AI" },
+    "background": {
+      "mode": "texture", "seed": 101, "hue": 214, "strength": 0.22,
+      "prompt": "abstract macro photograph of brushed dark blue anodised metal, soft directional studio light, fine grain, shallow depth of field, premium editorial texture"
+    },
+    "content": {
+      "eyebrow": "Infrastructure", "title": "Inference cost per request keeps falling",
+      "subtitle": "Blended cost across all production workloads, indexed to FY23",
+      "chart": {
+        "type": "area", "unit": "",
+        "categories": ["FY23", "FY24", "FY25", "FY26"],
+        "series": [{ "name": "Cost index", "data": [100, 71, 44, 26] }]
+      },
+      "insight": { "label": "Key insight", "text": "A 74% fall in three years — the unit economics that blocked rollout in FY23 no longer apply." },
+      "source": "Ethara AI infrastructure benchmark"
+    }
+  },
+  {
+    "canvas": "landscape", "theme": "ink", "template": "cover",
+    "brand": { "logoText": "Ethara AI" },
+    "background": {
+      "mode": "hero", "seed": 202, "hue": 30,
+      "prompt": "abstract flowing amber and deep bronze liquid light, long exposure, dark background, luxurious editorial photography, high contrast, cinematic"
+    },
+    "content": {
+      "eyebrow": "Annual Review 2026",
+      "title": "The year the agents started paying for themselves",
+      "subtitle": "How 1,240 enterprises rebuilt their AI stack around outcomes",
+      "source": "Ethara AI"
+    }
+  },
+  {
+    "canvas": "portrait", "theme": "midnight", "template": "chart-insight",
+    "brand": { "logoText": "Ethara AI" },
+    "background": {
+      "mode": "texture", "seed": 303, "hue": 224, "strength": 0.2,
+      "prompt": "abstract dark indigo geological strata, fine mineral grain, soft raking light, premium macro texture, moody"
+    },
+    "content": {
+      "eyebrow": "AI Adoption 2026", "title": "Enterprise adoption keeps pulling away",
+      "chart": {
+        "type": "hbar", "unit": "%", "max": 100,
+        "categories": ["Enterprise", "Mid-Market", "SMB"],
+        "series": [{ "name": "In production", "data": [78, 61, 43] }]
+      },
+      "insight": { "label": "Key insight", "text": "Enterprise adoption rose 24 points year on year — nearly double the SMB gain." },
+      "source": "Ethara AI Survey, n=1,240"
+    }
+  }
+]

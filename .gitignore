@@ -1,0 +1,6 @@
+node_modules/
+.build/
+out/
+# Generated backgrounds are reproducible from (prompt, seed) but each one
+# costs ~80s, so keep the cache locally and out of the repo.
+cache/

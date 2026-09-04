@@ -1,0 +1,192 @@
+/* ============================================================
+   Design tokens. Every template is written against these roles,
+   never against raw hex. Swap a theme block to rebrand the whole
+   system in one place.
+
+   Palette provenance: validated with the dataviz palette checker
+   against this system's own surfaces --
+     dark  (#0b1220): all 6 checks PASS
+     light (#fcfcfb): PASS, with a sub-3:1 contrast WARN on aqua /
+       yellow / magenta. That WARN obligates the relief rule, which
+       is why chart.js ships direct value labels by default.
+   Re-run scripts/validate-palette.sh after ANY palette edit.
+   ============================================================ */
+
+:root {
+  /* --- scale unit: every size is calc(N * var(--u)) so one canvas
+         preset rescales the entire layout. Set per-preset by the
+         renderer; 1 == the 1920x1080 reference. --- */
+  --u: 1;
+
+  /* --- type ------------------------------------------------ */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+
+  --fs-eyebrow:  calc(22px * var(--u));
+  --fs-body:     calc(28px * var(--u));
+  --fs-lead:     calc(34px * var(--u));
+  --fs-h3:       calc(40px * var(--u));
+  --fs-h2:       calc(56px * var(--u));
+  --fs-h1:       calc(76px * var(--u));
+  --fs-display:  calc(104px * var(--u));
+  --fs-hero:     calc(200px * var(--u));
+
+  --lh-tight: 1.04;
+  --lh-snug:  1.18;
+  --lh-body:  1.45;
+
+  /* Optical letter-spacing: large type needs negative tracking,
+     small caps-y type needs positive. */
+  --ls-display: -0.028em;
+  --ls-h1:      -0.022em;
+  --ls-h2:      -0.016em;
+  --ls-body:     0em;
+  --ls-eyebrow:  0.14em;
+
+  /* --- space ----------------------------------------------- */
+  --pad-canvas: calc(88px * var(--u));
+  --gap-xs: calc(8px  * var(--u));
+  --gap-sm: calc(16px * var(--u));
+  --gap-md: calc(28px * var(--u));
+  --gap-lg: calc(48px * var(--u));
+  --gap-xl: calc(72px * var(--u));
+
+  --radius-sm: calc(10px * var(--u));
+  --radius-md: calc(20px * var(--u));
+  --radius-lg: calc(32px * var(--u));
+
+  --rule: calc(1px * var(--u));
+  --bar-max: calc(24px * var(--u));   /* dataviz: bars never fill the band */
+  --surface-gap: calc(2px * var(--u)); /* dataviz: the separating spacer */
+}
+
+/* ============================================================
+   THEME: midnight (default) -- dark navy, the deck workhorse
+   ============================================================ */
+[data-theme='midnight'] {
+  --surface-0: #070d18;
+  --surface-1: #0b1220;
+  --surface-2: #131c2e;
+  --surface-3: #1c2740;
+
+  --text-primary:   #ffffff;
+  --text-secondary: #b8c2d4;
+  /* Muted + accent are the binding contrast constraint: they are the
+     tokens that must still clear 4.5:1 over the LIGHTEST region of a
+     mesh or generative background, not just over the flat surface.
+     Sized against a max mesh blob of hsl(200 62% 20%) -> 4.58 and 5.11. */
+  --text-muted:     #98a5bc;
+  --text-on-accent: #ffffff;
+
+  /* Chrome accent, deliberately NOT --series-1: text never wears a
+     data colour, so the two are allowed to diverge. */
+  --accent:      #7db1f0;
+  --accent-soft: rgba(125, 177, 240, 0.14);
+  --hairline:    rgba(255, 255, 255, 0.11);
+  --grid:        rgba(255, 255, 255, 0.09);
+
+  /* categorical -- fixed order, never cycled */
+  --series-1: #3987e5;  --series-2: #d95926;
+  --series-3: #199e70;  --series-4: #c98500;
+  --series-5: #d55181;  --series-6: #008300;
+  --series-7: #9085e9;  --series-8: #e66767;
+
+  --seq-100: #cde2fb; --seq-250: #86b6ef; --seq-400: #3987e5;
+  --seq-550: #1c5cab; --seq-700: #0d366b;
+
+  /* The status palette is specified for MARKS. As small text on a lit
+     mesh region it drops under 4.5:1, so text gets its own steps --
+     verified against the lightest mesh blob, not just the flat surface. */
+  --status-good-text:     #5ed15e;
+  --status-critical-text: #ef8585;
+
+  --area-wash: 0.16;
+
+  --scrim-from: rgba(7, 13, 24, 0.94);
+  --scrim-to:   rgba(7, 13, 24, 0.34);
+  color-scheme: dark;
+}
+
+/* ============================================================
+   THEME: paper -- light, for print and dense/analytical layouts
+   ============================================================ */
+[data-theme='paper'] {
+  --surface-0: #f4f3ef;
+  --surface-1: #fcfcfb;
+  --surface-2: #ffffff;
+  --surface-3: #eeede8;
+
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #6b6a65;   /* 3.81:1 was failing table headers */
+  --text-on-accent: #ffffff;
+
+  /* seq-550, not the series-1 step: #2a78d6 as eyebrow text measures
+     4.30:1 on the paper surface, just under the 4.5 floor. */
+  --accent:      #1c5cab;
+  --accent-soft: rgba(28, 92, 171, 0.10);
+  --hairline:    rgba(11, 11, 11, 0.13);
+  --grid:        rgba(11, 11, 11, 0.10);
+
+  --series-1: #2a78d6;  --series-2: #eb6834;
+  --series-3: #1baf7a;  --series-4: #eda100;
+  --series-5: #e87ba4;  --series-6: #008300;
+  --series-7: #4a3aa7;  --series-8: #e34948;
+
+  --seq-100: #cde2fb; --seq-250: #86b6ef; --seq-400: #3987e5;
+  --seq-550: #1c5cab; --seq-700: #0d366b;
+
+  --status-good-text:     #0a7d0a;
+  --status-critical-text: #b82f2f;
+
+  --area-wash: 0.10;
+
+  --scrim-from: rgba(252, 252, 251, 0.95);
+  --scrim-to:   rgba(252, 252, 251, 0.40);
+  color-scheme: light;
+}
+
+/* ============================================================
+   THEME: ink -- near-black editorial, for quote/cover moments
+   ============================================================ */
+[data-theme='ink'] {
+  --surface-0: #0a0a0a;
+  --surface-1: #111111;
+  --surface-2: #1a1a19;
+  --surface-3: #262625;
+
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #9a998f;
+  --text-on-accent: #0a0a0a;
+
+  --accent:      #eda100;
+  --accent-soft: rgba(237, 161, 0, 0.15);
+  --hairline:    rgba(255, 255, 255, 0.13);
+  --grid:        rgba(255, 255, 255, 0.09);
+
+  --series-1: #3987e5;  --series-2: #d95926;
+  --series-3: #199e70;  --series-4: #c98500;
+  --series-5: #d55181;  --series-6: #008300;
+  --series-7: #9085e9;  --series-8: #e66767;
+
+  --seq-100: #cde2fb; --seq-250: #86b6ef; --seq-400: #3987e5;
+  --seq-550: #1c5cab; --seq-700: #0d366b;
+
+  --status-good-text:     #5ed15e;
+  --status-critical-text: #ef8585;
+
+  --area-wash: 0.16;
+
+  --scrim-from: rgba(10, 10, 10, 0.95);
+  --scrim-to:   rgba(10, 10, 10, 0.38);
+  color-scheme: dark;
+}
+
+/* Status -- fixed, never themed, never reused as a series color */
+:root {
+  --status-good:     #0ca30c;
+  --status-warning:  #fab219;
+  --status-serious:  #ec835a;
+  --status-critical: #d03b3b;
+}
