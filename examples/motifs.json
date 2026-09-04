@@ -1,0 +1,177 @@
+[
+  {
+    "canvas": "landscape",
+    "theme": "ethara",
+    "template": "cover",
+    "brand": {
+      "logoText": "Ethara AI"
+    },
+    "altText": "Cover frame with a schematic trajectory motif drawn in the Ethara purple palette.",
+    "background": {
+      "mode": "mesh",
+      "hue": 272,
+      "seed": 11,
+      "motif": {
+        "type": "trajectory",
+        "opacity": 0.62
+      }
+    },
+    "content": {
+      "eyebrow": "motif \u00b7 trajectory",
+      "title": "Reinforcement learning at trajectory scale",
+      "titleAccent": "trajectory",
+      "subtitle": "Schematic line systems, generated as exact SVG",
+      "source": "motif showcase"
+    }
+  },
+  {
+    "canvas": "landscape",
+    "theme": "ethara",
+    "template": "cover",
+    "brand": {
+      "logoText": "Ethara AI"
+    },
+    "altText": "Cover frame with a schematic reward-curve motif drawn in the Ethara purple palette.",
+    "background": {
+      "mode": "mesh",
+      "hue": 272,
+      "seed": 18,
+      "motif": {
+        "type": "reward-curve",
+        "opacity": 0.62
+      }
+    },
+    "content": {
+      "eyebrow": "motif \u00b7 reward-curve",
+      "title": "Reinforcement learning at reward-curve scale",
+      "titleAccent": "reward-curve",
+      "subtitle": "Schematic line systems, generated as exact SVG",
+      "source": "motif showcase"
+    }
+  },
+  {
+    "canvas": "landscape",
+    "theme": "ethara",
+    "template": "cover",
+    "brand": {
+      "logoText": "Ethara AI"
+    },
+    "altText": "Cover frame with a schematic rl-loop motif drawn in the Ethara purple palette.",
+    "background": {
+      "mode": "mesh",
+      "hue": 272,
+      "seed": 25,
+      "motif": {
+        "type": "rl-loop",
+        "opacity": 0.62
+      }
+    },
+    "content": {
+      "eyebrow": "motif \u00b7 rl-loop",
+      "title": "Reinforcement learning at rl-loop scale",
+      "titleAccent": "rl-loop",
+      "subtitle": "Schematic line systems, generated as exact SVG",
+      "source": "motif showcase"
+    }
+  },
+  {
+    "canvas": "landscape",
+    "theme": "ethara",
+    "template": "cover",
+    "brand": {
+      "logoText": "Ethara AI"
+    },
+    "altText": "Cover frame with a schematic lattice motif drawn in the Ethara purple palette.",
+    "background": {
+      "mode": "mesh",
+      "hue": 272,
+      "seed": 32,
+      "motif": {
+        "type": "lattice",
+        "opacity": 0.62
+      }
+    },
+    "content": {
+      "eyebrow": "motif \u00b7 lattice",
+      "title": "Reinforcement learning at lattice scale",
+      "titleAccent": "lattice",
+      "subtitle": "Schematic line systems, generated as exact SVG",
+      "source": "motif showcase"
+    }
+  },
+  {
+    "canvas": "landscape",
+    "theme": "ethara",
+    "template": "cover",
+    "brand": {
+      "logoText": "Ethara AI"
+    },
+    "altText": "Cover frame with a schematic state-grid motif drawn in the Ethara purple palette.",
+    "background": {
+      "mode": "mesh",
+      "hue": 272,
+      "seed": 39,
+      "motif": {
+        "type": "state-grid",
+        "opacity": 0.62
+      }
+    },
+    "content": {
+      "eyebrow": "motif \u00b7 state-grid",
+      "title": "Reinforcement learning at state-grid scale",
+      "titleAccent": "state-grid",
+      "subtitle": "Schematic line systems, generated as exact SVG",
+      "source": "motif showcase"
+    }
+  },
+  {
+    "canvas": "landscape",
+    "theme": "ethara",
+    "template": "cover",
+    "brand": {
+      "logoText": "Ethara AI"
+    },
+    "altText": "Cover frame with a schematic contour motif drawn in the Ethara purple palette.",
+    "background": {
+      "mode": "mesh",
+      "hue": 272,
+      "seed": 46,
+      "motif": {
+        "type": "contour",
+        "opacity": 0.62
+      }
+    },
+    "content": {
+      "eyebrow": "motif \u00b7 contour",
+      "title": "Reinforcement learning at contour scale",
+      "titleAccent": "contour",
+      "subtitle": "Schematic line systems, generated as exact SVG",
+      "source": "motif showcase"
+    }
+  },
+  {
+    "canvas": "landscape",
+    "theme": "ethara",
+    "template": "cover",
+    "brand": {
+      "logoText": "Ethara AI"
+    },
+    "altText": "Cover frame with a schematic grid motif drawn in the Ethara purple palette.",
+    "background": {
+      "mode": "mesh",
+      "hue": 272,
+      "seed": 53,
+      "motif": {
+        "type": "grid",
+        "opacity": 0.62
+      }
+    },
+    "content": {
+      "eyebrow": "motif \u00b7 grid",
+      "title": "Reinforcement learning at grid scale",
+      "titleAccent": "grid",
+      "subtitle": "Schematic line systems, generated as exact SVG",
+      "source": "motif showcase"
+    }
+  }
+]

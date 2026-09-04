@@ -16,13 +16,23 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
 
 const when = (cond, html) => (cond ? html : '');
 
+/* Set one phrase of the headline in the accent colour. Split on the exact
+   substring so escaping still applies to every part. */
+function headline(title, accent) {
+  if (!accent || !title.includes(accent)) return esc(title);
+  const i = title.indexOf(accent);
+  return esc(title.slice(0, i))
+    + `<span class="title__accent">${esc(accent)}</span>`
+    + esc(title.slice(i + accent.length));
+}
+
 /* ---- shared chrome ---------------------------------------------------- */
 
 function head(c, { titleClass = 'title', fit = '0.60' } = {}) {
   return `
     <header class="slide-head stack" style="gap:var(--gap-sm);align-items:flex-start">
       ${when(c.eyebrow, `<div class="eyebrow" data-contrast>${esc(c.eyebrow)}</div>`)}
-      ${when(c.title, `<h1 class="${titleClass}" data-contrast data-fit="${fit}">${esc(c.title)}</h1>`)}
+      ${when(c.title, `<h1 class="${titleClass}" data-contrast data-fit="${fit}">${headline(c.title, c.titleAccent)}</h1>`)}
       ${when(c.subtitle, `<p class="subtitle" data-contrast data-fit="0.7">${esc(c.subtitle)}</p>`)}
     </header>`;
 }
@@ -81,7 +91,7 @@ T['cover'] = d => {
   return `
     <div class="canvas__content" style="justify-content:flex-end">
       ${when(c.eyebrow, `<div class="eyebrow" data-contrast>${esc(c.eyebrow)}</div>`)}
-      <h1 class="title title--display mt-md" data-contrast data-fit="0.5">${esc(c.title)}</h1>
+      <h1 class="title title--display mt-md" data-contrast data-fit="0.5">${headline(c.title, c.titleAccent)}</h1>
       ${when(c.subtitle, `<p class="subtitle mt-md" style="max-width:44ch" data-contrast data-fit="0.7">${esc(c.subtitle)}</p>`)}
       <div class="mt-xl">${foot(d)}</div>
     </div>`;

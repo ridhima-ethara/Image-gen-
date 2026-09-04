@@ -8,7 +8,11 @@
   "background": {
     "mode": "mesh",
     "hue": 272,
-    "seed": 17
+    "seed": 17,
+    "motif": {
+      "type": "reward-curve",
+      "opacity": 0.5
+    }
   },
   "content": {
     "eyebrow": "SWE-EVO Benchmark",
@@ -44,7 +48,8 @@
       ],
       "decimals": 2
     },
-    "source": "SWE-EVO, arXiv:2512.18470 (v5), Table 2 \u00b7 OpenHands scaffold \u00b7 48 tasks, avg 21 files and 874 tests per task"
+    "source": "SWE-EVO, arXiv:2512.18470 (v5), Table 2 \u00b7 OpenHands scaffold \u00b7 48 tasks, avg 21 files and 874 tests per task",
+    "titleAccent": "a quarter"
   },
   "altText": "Horizontal bar chart of SWE-EVO success rates for eight coding models under the OpenHands scaffold. gpt-5.4 leads at 25.00% of tasks resolved, followed by kimi-k2p5 at 22.92% and deepseek-v3p2 at 20.83%, down to gpt-5-nano-08-07 at 4.17%. The axis runs to 100%, so every bar sits in the left quarter of the frame, showing that no model resolves more than a quarter of long-horizon software evolution tasks."
 }

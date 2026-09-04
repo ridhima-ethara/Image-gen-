@@ -85,7 +85,7 @@ export function grainDataURL() {
     `<filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/>` +
     `<feColorMatrix type="saturate" values="0"/></filter>` +
     `<rect width="220" height="220" filter="url(#n)"/></svg>`;
-  return `url("data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}")`;
+  return `url('data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}')`;
 }
 
 /* ---- FLUX via Ollama --------------------------------------------------- */
@@ -181,7 +181,7 @@ export async function resolveBackground(design, canvas, pxW, pxH, log = () => {}
   }
 
   /* full-bleed */
-  out.bgCss = `url("${await toDataURL(await derive(raw, pxW, pxH, 1.2))}")`;
+  out.bgCss = `url('${await toDataURL(await derive(raw, pxW, pxH, 1.2))}')`;
   out.scrim = 'linear';
   return out;
 }

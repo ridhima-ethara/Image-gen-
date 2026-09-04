@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+import { MOTIF_TYPES, MOTIF_PLACEMENTS } from './motifs.js';
 
 /* ============================================================
    The contract between the LLM and the renderer.
@@ -128,6 +129,9 @@ const Table = z.object({
 const Content = z.object({
   eyebrow: z.string().max(52).optional(),
   title: z.string().max(90).optional(),
+  /* An exact substring of `title` to set in the accent colour. Editorial
+     emphasis without a second type size. Ignored if it is not found. */
+  titleAccent: z.string().max(40).optional(),
   subtitle: z.string().max(160).optional(),
   chart: Chart.optional(),
   insight: Insight.optional(),
@@ -155,6 +159,14 @@ const Background = z.object({
   hue: z.number().min(0).max(360).default(214),
   /* Overlay strength for `texture` mode. */
   strength: z.number().min(0).max(1).default(0.18),
+  /* A schematic line-system layer: the imagery the brief actually asks
+     for (trajectories, reward curves, RL loops, state transitions),
+     drawn as exact SVG rather than prompted out of a diffusion model. */
+  motif: z.object({
+    type: z.enum(MOTIF_TYPES).nullable().default(null),
+    placement: z.enum(MOTIF_PLACEMENTS).nullable().default(null),
+    opacity: z.number().min(0).max(0.85).default(0.6),
+  }).strict().default({}),
 }).strict();
 
 export const DesignSchema = z.object({
@@ -211,7 +223,7 @@ const REQUIRED = {
 const clamp = (v, lo, hi) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : undefined);
 const trunc = (v, n) => (typeof v === 'string' ? v.slice(0, n) : undefined);
 
-const CONTENT_KEYS = ['eyebrow', 'title', 'subtitle', 'chart', 'insight', 'stats', 'items', 'steps', 'quote', 'table', 'source'];
+const CONTENT_KEYS = ['eyebrow', 'title', 'titleAccent', 'subtitle', 'chart', 'insight', 'stats', 'items', 'steps', 'quote', 'table', 'source'];
 
 function pick(obj, keys) {
   if (!obj || typeof obj !== 'object') return obj;
@@ -261,11 +273,15 @@ export function repairDesign(raw) {
   }
 
   if (d.background) {
-    const b = pick(d.background, ['mode', 'prompt', 'seed', 'hue', 'strength']);
+    const b = pick(d.background, ['mode', 'prompt', 'seed', 'hue', 'strength', 'motif']);
     if (b.strength !== undefined) b.strength = clamp(b.strength, 0, 1);
     if (b.hue !== undefined) b.hue = clamp(b.hue, 0, 360);
     if (b.seed !== undefined) b.seed = clamp(Math.round(b.seed), 0, 2 ** 31 - 1);
     if (b.prompt !== undefined) b.prompt = trunc(b.prompt, 600);
+    if (b.motif) {
+      b.motif = pick(b.motif, ['type', 'placement', 'opacity']);
+      if (b.motif.opacity !== undefined) b.motif.opacity = clamp(b.motif.opacity, 0, 0.85);
+    }
     for (const k of Object.keys(b)) if (b[k] === undefined) delete b[k];
     d.background = b;
   }
@@ -273,6 +289,12 @@ export function repairDesign(raw) {
   const c = pick(d.content, CONTENT_KEYS);
   if (c.eyebrow !== undefined) c.eyebrow = trunc(c.eyebrow, 52);
   if (c.title !== undefined) c.title = trunc(c.title, 90);
+  if (c.titleAccent !== undefined) {
+    c.titleAccent = trunc(c.titleAccent, 40);
+    /* Silently drop an accent phrase that is not actually in the title --
+       highlighting nothing is better than a retry over a cosmetic field. */
+    if (!c.title || !c.title.includes(c.titleAccent)) delete c.titleAccent;
+  }
   if (c.subtitle !== undefined) c.subtitle = trunc(c.subtitle, 160);
   if (c.source !== undefined) c.source = trunc(c.source, 140);
 

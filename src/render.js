@@ -6,6 +6,7 @@ import sharp from 'sharp';
 import { CANVASES, validateDesign, brandCheck } from './schema.js';
 import { renderTemplate } from './templates.js';
 import { resolveBackground } from './background.js';
+import { buildMotif, MOTIF_INK } from './motifs.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -16,8 +17,20 @@ export const OUTPUTS = { hd: 1920, '2k': 2560, '4k': 3840, '8k': 7680 };
 /* ---- page assembly ----------------------------------------------------- */
 
 function buildHTML(design, canvas, bg) {
+  const m = design.background.motif;
+  const motif = m && m.type
+    ? buildMotif({
+        type: m.type,
+        placement: m.placement,
+        seed: design.background.seed,
+        opacity: m.opacity,
+        ...(MOTIF_INK[design.theme] || MOTIF_INK.midnight),
+      })
+    : null;
+
   const layers = [
     `<div class="canvas__bg" style="background:${bg.bgCss}"></div>`,
+    motif ? `<div class="canvas__motif" style="${motif.css}"></div>` : '',
     bg.heroUrl ? `<div class="herobg" style="background-image:url('${bg.heroUrl}')"></div>` : '',
     bg.textureUrl
       ? `<div class="canvas__texture" style="background-image:url('${bg.textureUrl}');opacity:${bg.textureOpacity}"></div>`
