@@ -34,12 +34,59 @@ def catalog():
 
 
 def json_schema():
-    r = node(["src/validate.js", "--json-schema"])
-    return json.loads(r.stdout)
+    """The schema handed to Ollama's constrained decoder.
+
+    altText is OPTIONAL in src/schema.js, so hand-written JSON without it
+    still renders (with a brand flag). But a model given an optional field
+    simply omits it -- no amount of retrying fixes that, because constrained
+    decoding never demands it. So we promote it to required here, at the
+    only layer where it changes the model's behaviour.
+    """
+    schema = json.loads(node(["src/validate.js", "--json-schema"]).stdout)
+    req = schema.setdefault("required", [])
+    if "altText" in schema.get("properties", {}) and "altText" not in req:
+        req.append("altText")
+    return schema
 
 
-SYSTEM = """You are the visual director for a business-content pipeline. You emit ONE JSON \
-object matching the provided schema. No prose, no markdown, no code fences.
+SYSTEM = """You are the Image Brief author for Ethara.AI, an RL/AGI infrastructure \
+company. You emit ONE JSON object matching the provided schema. No prose, no \
+markdown, no code fences.
+
+The visual must read as a serious, technical AI/RL infrastructure company -- never
+stocky, never consumer-cute.
+
+VISUAL TYPE SELECTION -- choose from the evidence you actually have:
+  quantitative contrast in the brief -> a restrained chart
+  a process or mechanism            -> a systems diagram (process-flow / timeline)
+  a broad idea with no dataset      -> conceptual/schematic (cover, quote, cards, list)
+NEVER use a chart when the brief contains no supporting quantitative data. A chart
+with invented numbers is the single worst output you can produce.
+
+FOCAL SYSTEM: reduce the idea to ONE focal visual system. Do not try to illustrate
+every paragraph of the source.
+
+VISUAL DIRECTION: clean, minimal, technical, research-forward. High signal-to-noise,
+generous negative space, strong typographic treatment, restrained and engineered.
+Appropriate abstract imagery is schematic, not literal: reward curves, RL loops,
+agent-verifier diagrams, benchmark charts, state transitions, trajectories.
+
+FORBIDDEN -- never describe these in background.prompt: glowing brains, humanoid
+robots, neon circuit swirls, holographic AI faces, generic futuristic server rooms,
+busy compositions, cheesy metaphors (handshakes, lightbulbs, puzzle pieces, rockets).
+
+BRAND: theme is ALWAYS "ethara". The palette is the Ethara Purple family only and
+the renderer owns it -- never set brand.accent. Typography (Roboto display, DM Sans
+body) is likewise the renderer's job.
+
+ALT TEXT: always write design.altText -- one or two sentences describing the visual
+for a reader who cannot see it. Describe what is shown, not "an image of".
+
+CHART SERIES AND THE BRAND PALETTE: the Ethara palette is a single hue family, so it
+can only encode ONE series, or several series that form a genuinely ORDERED set
+(tiers, stages, time buckets) -- in which case set chart.ordered = true. If the
+series are unordered categories, prefer a single series instead. Do not request more
+than 4 series.
 
 You are choosing a LAYOUT and supplying CONTENT. You never write CSS, never position \
 anything, and never describe how something should look. The renderer owns all of that.
@@ -115,10 +162,9 @@ so a warm background fights them: use 195-240 whenever the slide contains a char
 Warm hues (20-45) are for chart-free frames only -- cover, quote, list-insight.
 Always set brand.logoText if the brief names an organisation.
 
-THEMES: midnight (dark navy, default), paper (light, best for tables and print),
-ink (near-black, editorial -- good with quote and cover).
-
-CANVAS: landscape for decks, portrait for LinkedIn/Instagram feed, square, story.
+CANVAS / PLACEMENT: portrait (1080x1350, Instagram + LinkedIn feed -- the default
+for social), square (1080x1080), story (1080x1920), li-landscape (1200x627),
+yt-thumb (1280x720), li-banner (1584x396), landscape (1920x1080).
 """
 
 
@@ -176,8 +222,13 @@ def main():
     ap.add_argument("--brief-file", help="read the brief from a text file instead")
     ap.add_argument("--model", default=os.environ.get("SMA_MODEL", "qwen2.5:7b"),
                     help="Ollama model for the design JSON (default qwen2.5:7b)")
-    ap.add_argument("--canvas", default="landscape", help="landscape|portrait|square|story")
-    ap.add_argument("--theme", default="midnight", help="midnight|paper|ink")
+    ap.add_argument("--canvas", default=None,
+                    help="landscape|portrait|square|story|li-landscape|yt-thumb|li-banner")
+    ap.add_argument("--placement", default=None,
+                    help="linkedin-portrait|instagram-feed|youtube-thumbnail|linkedin-banner|... (sets --canvas)")
+    ap.add_argument("--theme", default="ethara", help="ethara (brand) | midnight | paper | ink")
+    ap.add_argument("--options", type=int, default=1,
+                    help="how many distinct brief options to render (2 = the A/B human gate)")
     ap.add_argument("--out", default="4k", help="hd|2k|4k|8k or a long-edge pixel count")
     ap.add_argument("--dir", default="out")
     ap.add_argument("--name", default="slide")
@@ -187,6 +238,15 @@ def main():
     ap.add_argument("--design", help="skip the model; render this design JSON file")
     ap.add_argument("--save-design", help="write the generated design JSON here")
     args = ap.parse_args()
+
+    # A placement names a real platform slot; it wins over a raw canvas.
+    if args.placement:
+        placements = json.loads(node(["src/validate.js", "--placements"]).stdout)
+        if args.placement not in placements:
+            ap.error(f"unknown placement. choose from: {', '.join(sorted(placements))}")
+        args.canvas = placements[args.placement]
+    if not args.canvas:
+        args.canvas = "portrait"   # social feed is the default destination
 
     # Accept the brief three ways, because quoting a long prompt into a
     # shell is the most annoying step in the whole pipeline:
@@ -215,83 +275,112 @@ def main():
         args.brief = sys.stdin.read().strip()
 
     if args.design:
-        design_json = open(args.design).read()
+        designs = [open(args.design).read()]
     else:
         if not args.brief:
             ap.error("a brief is required unless --design is given")
         cat = catalog()
         schema = json_schema()
-        design_json, last = None, None
-        user = build_prompt(args.brief, cat, args.canvas, args.theme)
+        designs = []
 
-        for attempt in range(1, args.retries + 1):
-            print(f"[{attempt}/{args.retries}] asking {args.model} for a design...", file=sys.stderr)
-            try:
-                out = call_ollama(args.model, SYSTEM, user, schema,
-                                  0.4 if attempt == 1 else 0.7)
-            except Exception as e:
-                print(f"  ollama call failed: {e}", file=sys.stderr)
-                break
+        # The skill requires two DISTINCT options for the human gate, differing
+        # on at least two visual dimensions -- composition, focal subject,
+        # palette emphasis or viewpoint. Wording changes are not a second
+        # direction, so option B is told explicitly what A already did.
+        for opt in range(args.options):
+            label = chr(ord("A") + opt)
+            user = build_prompt(args.brief, cat, args.canvas, args.theme)
+            if opt > 0:
+                prev = json.loads(designs[-1])
+                user += (
+                    f"\n\nThis is option {label}. Option A already used:\n"
+                    f"- template/composition: {prev['template']}\n"
+                    f"- focal subject: {prev['content'].get('title')}\n"
+                    f"- visual type: {'chart' if prev['content'].get('chart') else 'conceptual/schematic'}\n"
+                    "Option " + label + " MUST differ on at least TWO of: composition (a different "
+                    "template), focal subject, visual type, or viewpoint. Rewording option A is NOT "
+                    "an acceptable second option."
+                )
+            got, last = None, None
 
-            check = node(["src/validate.js"], stdin=out)
-            result = json.loads(check.stdout or '{"ok":false,"issues":["no validator output"]}')
+            for attempt in range(1, args.retries + 1):
+                print(f"[option {label} · {attempt}/{args.retries}] asking {args.model}...", file=sys.stderr)
+                try:
+                    out = call_ollama(args.model, SYSTEM, user, schema,
+                                      0.4 if attempt == 1 else 0.75)
+                except Exception as e:
+                    print(f"  ollama call failed: {e}", file=sys.stderr)
+                    break
 
-            if result["ok"] and wants_chart(args.brief) and not result["design"]["content"].get("chart"):
-                result = {"ok": False, "issues": [
-                    'the brief asks for a chart, but you chose template '
-                    f'"{result["design"]["template"]}" with no content.chart. '
-                    "Use chart-insight or chart-split and fill content.chart."
-                ]}
+                check = node(["src/validate.js"], stdin=out)
+                result = json.loads(check.stdout or '{"ok":false,"issues":["no validator output"]}')
 
-            if result["ok"]:
-                design = result["design"]
-                # The brief supplied no numbers, so anything plotted was
-                # invented. Never let invented data carry a citation.
-                if not brief_has_numbers(args.brief):
-                    design["content"]["source"] = "Illustrative data — not from a real source"
-                # Render the REPAIRED design, not the raw model output.
-                design_json = json.dumps(design, indent=2)
-                break
-            last = result["issues"]
-            for i in last:
-                print(f"  invalid: {i}", file=sys.stderr)
-            # Feed the exact failures back rather than just asking again.
-            user = (build_prompt(args.brief, cat, args.canvas, args.theme)
-                    + "\n\nYour previous answer was REJECTED for these reasons. "
-                      "Fix every one of them:\n"
-                    + "\n".join(f"- {i}" for i in last))
+                # Alt text is a hard requirement of the image-brief skill
+                # (rule 11), not a nice-to-have -- so it is worth a retry
+                # rather than shipping a non-compliant image with a warning.
+                if result["ok"] and not (result["design"].get("altText") or "").strip():
+                    result = {"ok": False, "issues": [
+                        "design.altText is missing. Write one or two sentences describing the "
+                        "visual for a reader who cannot see it: what is shown and what it says. "
+                        "Do not begin with \"an image of\"."
+                    ]}
 
-        if design_json is None:
-            print("could not get a valid design from the model.", file=sys.stderr)
-            if last:
-                print("last failures:", file=sys.stderr)
+                if result["ok"] and wants_chart(args.brief) and not result["design"]["content"].get("chart"):
+                    result = {"ok": False, "issues": [
+                        'the brief asks for a chart, but you chose template '
+                        f'"{result["design"]["template"]}" with no content.chart. '
+                        "Use chart-insight or chart-split and fill content.chart."
+                    ]}
+
+                if result["ok"]:
+                    design = result["design"]
+                    design["canvas"] = args.canvas
+                    design["theme"] = args.theme
+                    # No numbers in the brief means anything plotted was invented.
+                    # Never let invented data carry a citation.
+                    if not brief_has_numbers(args.brief):
+                        design["content"]["source"] = "Illustrative data \u2014 not from a real source"
+                    got = json.dumps(design, indent=2)
+                    break
+
+                last = result["issues"]
                 for i in last:
+                    print(f"  invalid: {i}", file=sys.stderr)
+                user = user + "\n\nYour previous answer was REJECTED. Fix every one of these:\n" + \
+                    "\n".join(f"- {i}" for i in last)
+
+            if got is None:
+                print(f"could not get a valid design for option {label}.", file=sys.stderr)
+                for i in (last or []):
                     print(f"  - {i}", file=sys.stderr)
-            print("\nTry: a stronger --model, or hand-write the JSON and use --design.", file=sys.stderr)
-            return 2
+                if not designs:
+                    print("\nTry: a stronger --model, or hand-write the JSON and use --design.", file=sys.stderr)
+                    return 2
+                break
+            designs.append(got)
 
-    # --canvas and --theme are the caller's instruction. Models drift on
-    # them constantly, so we overwrite rather than hope.
-    _d = json.loads(design_json)
-    for _one in (_d if isinstance(_d, list) else [_d]):
-        _one["canvas"] = args.canvas
-        _one["theme"] = args.theme
-    design_json = json.dumps(_d, indent=2)
+    rc = 0
+    for opt, design_json in enumerate(designs):
+        label = chr(ord("A") + opt)
+        name = args.name if len(designs) == 1 else f"{args.name}-{label}"
 
-    if args.save_design:
-        with open(args.save_design, "w") as f:
-            f.write(design_json)
-        print(f"design -> {args.save_design}", file=sys.stderr)
+        if args.save_design:
+            path = args.save_design if len(designs) == 1 else \
+                args.save_design.replace(".json", f"-{label}.json")
+            with open(path, "w") as f:
+                f.write(design_json)
+            print(f"design -> {path}", file=sys.stderr)
 
-    cmd = ["src/cli.js", "-", "--out", args.out, "--dir", args.dir, "--name", args.name]
-    if args.pdf:
-        cmd.append("--pdf")
-    if args.loose:
-        cmd.append("--loose")
+        cmd = ["src/cli.js", "-", "--out", args.out, "--dir", args.dir, "--name", name]
+        if args.pdf:
+            cmd.append("--pdf")
+        if args.loose:
+            cmd.append("--loose")
 
-    proc = subprocess.Popen(["node", *cmd], cwd=ROOT, stdin=subprocess.PIPE, text=True)
-    proc.communicate(design_json)
-    return proc.returncode
+        proc = subprocess.Popen(["node", *cmd], cwd=ROOT, stdin=subprocess.PIPE, text=True)
+        proc.communicate(design_json)
+        rc = rc or proc.returncode
+    return rc
 
 
 if __name__ == "__main__":

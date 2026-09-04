@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 import sharp from 'sharp';
-import { CANVASES, validateDesign } from './schema.js';
+import { CANVASES, validateDesign, brandCheck } from './schema.js';
 import { renderTemplate } from './templates.js';
 import { resolveBackground } from './background.js';
 
@@ -75,6 +75,11 @@ export async function render(rawDesign, opts = {}) {
   }
   const design = v.design;
   const canvas = CANVASES[design.canvas];
+
+  /* Brand compliance is REPORTED, never auto-corrected -- the skill's
+     rule 12 puts that call with the human, not the renderer. */
+  const brandFlags = brandCheck(design);
+  for (const f of brandFlags) log(`  BRAND: ${f}`);
 
   const longEdge = OUTPUTS[output] || Number(output);
   if (!longEdge || !Number.isFinite(longEdge)) throw new Error(`bad output preset: ${output}`);
@@ -169,7 +174,15 @@ export async function render(rawDesign, opts = {}) {
       : pipeline.resize(targetW, targetH, { kernel: 'lanczos3', fit: 'fill' });
     await out.png({ compressionLevel: 9, adaptiveFiltering: true }).toFile(pngPath);
 
-    const result = { png: pngPath, width: targetW, height: targetH, qa, design };
+    const result = { png: pngPath, width: targetW, height: targetH, qa, design, brandFlags };
+
+    /* Alt text travels with the image as a sidecar so it cannot be lost
+       between render and publish. */
+    if (design.altText) {
+      const altPath = path.join(path.resolve(outDir), `${name}.alt.txt`);
+      await fs.writeFile(altPath, design.altText + '\n');
+      result.alt = altPath;
+    }
 
     if (pdf) {
       /* Vector, resolution-independent, same HTML. Free deliverable. */

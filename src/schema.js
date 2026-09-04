@@ -8,14 +8,34 @@ import { z } from 'zod/v4';
    out. A validation failure is a retry, not a broken slide.
    ============================================================ */
 
+/* Platform placements from the image-brief skill. Configurable
+   references, not hard-coded constants. `u` scales the whole type and
+   space system, so a short banner gets proportionally smaller type. */
 export const CANVASES = {
-  landscape: { w: 1920, h: 1080, u: 1.0 },   // decks, LinkedIn link cards
-  portrait:  { w: 1080, h: 1350, u: 0.72 },  // LinkedIn / IG feed -- highest reach
-  square:    { w: 1080, h: 1080, u: 0.68 },
-  story:     { w: 1080, h: 1920, u: 0.74 },  // stories / reels
+  landscape:    { w: 1920, h: 1080, u: 1.00 },  // YouTube video, decks
+  portrait:     { w: 1080, h: 1350, u: 0.72 },  // IG feed primary / LinkedIn portrait (4:5)
+  square:       { w: 1080, h: 1080, u: 0.68 },  // IG + LinkedIn square, carousel
+  story:        { w: 1080, h: 1920, u: 0.74 },  // Stories / Reels (9:16)
+  'li-landscape': { w: 1200, h: 627, u: 0.60 }, // LinkedIn feed landscape (1.91:1)
+  'yt-thumb':   { w: 1280, h: 720,  u: 0.66 },  // YouTube thumbnail (16:9)
+  'li-banner':  { w: 1584, h: 396,  u: 0.40 },  // LinkedIn personal banner (4:1)
 };
 
-export const THEMES = ['midnight', 'paper', 'ink'];
+/* Placement name -> canvas, so a brief can say where it is going. */
+export const PLACEMENTS = {
+  'instagram-feed': 'portrait',
+  'instagram-square': 'square',
+  'instagram-story': 'story',
+  'linkedin-portrait': 'portrait',
+  'linkedin-square': 'square',
+  'linkedin-landscape': 'li-landscape',
+  'linkedin-carousel': 'square',
+  'linkedin-banner': 'li-banner',
+  'youtube-thumbnail': 'yt-thumb',
+  'youtube-video': 'landscape',
+};
+
+export const THEMES = ['ethara', 'midnight', 'paper', 'ink'];
 
 export const TEMPLATES = [
   'cover', 'chart-insight', 'chart-split', 'stat-hero', 'kpi-grid',
@@ -60,6 +80,11 @@ const Chart = z.object({
      when the source quotes a fixed precision: "25%" sitting beside
      "22.92%" reads as sloppy even when both are exact. */
   decimals: z.number().int().min(0).max(3).nullable().default(null),
+  /* True when the series form an ORDERED set (tiers, stages, time
+     buckets). Only then may a single-hue ordinal ramp encode them.
+     Unordered categories need distinct hues, which a one-family brand
+     palette cannot supply -- that case gets flagged, not recoloured. */
+  ordered: z.boolean().default(false),
 }).strict()
   .refine(c => c.series.every(s => s.data.length === c.categories.length),
     { message: 'every series.data must be the same length as categories' })
@@ -136,6 +161,9 @@ export const DesignSchema = z.object({
   canvas: z.enum(Object.keys(CANVASES)).default('landscape'),
   theme: z.enum(THEMES).default('midnight'),
   template: z.enum(TEMPLATES),
+  /* Accessible description of the visual. Required by the image-brief
+     skill; the renderer writes it beside the PNG as a .txt sidecar. */
+  altText: z.string().max(400).optional(),
   brand: z.object({
     logoText: z.string().max(28).default(''),
     accent: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
@@ -222,7 +250,9 @@ function retarget(d) {
 
 export function repairDesign(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
-  const d = pick(raw, ['canvas', 'theme', 'template', 'brand', 'background', 'content']);
+  const d = pick(raw, ['canvas', 'theme', 'template', 'altText', 'brand', 'background', 'content']);
+
+  if (d.altText !== undefined) d.altText = trunc(d.altText, 400);
 
   if (d.brand) {
     d.brand = pick(d.brand, ['logoText', 'accent']);
@@ -253,7 +283,7 @@ export function repairDesign(raw) {
   }
 
   if (c.chart) {
-    const ch = pick(c.chart, ['type', 'categories', 'series', 'unit', 'max', 'focusSeries', 'decimals']);
+    const ch = pick(c.chart, ['type', 'categories', 'series', 'unit', 'max', 'focusSeries', 'decimals', 'ordered']);
     if (Array.isArray(ch.categories)) ch.categories = ch.categories.slice(0, 24).map(x => trunc(String(x), 28));
     if (Array.isArray(ch.series)) {
       ch.series = ch.series.slice(0, 8).map(s => ({
@@ -322,6 +352,58 @@ export function repairDesign(raw) {
 
   d.content = c;
   return retarget(d);
+}
+
+
+/* ============================================================
+   Brand compliance.
+
+   Skill rule 12 / Constitution Principle VII: FLAG off-brand output,
+   never silently correct it. So these are warnings surfaced to the
+   caller, not mutations -- the human gate decides.
+   ============================================================ */
+
+/* Cliche AI stock imagery the brief forbids outright. */
+const FORBIDDEN_IMAGERY = [
+  [/glowing brain|brain\b.*glow|neural brain/i, 'glowing brain'],
+  [/humanoid|android|robot\b/i, 'humanoid robot'],
+  [/circuit (board|swirl|pattern)|neon circuit/i, 'neon circuit swirls'],
+  [/hologram|holographic (face|head|human)/i, 'holographic AI face'],
+  [/server (room|rack|farm)|data ?cent(er|re)/i, 'generic futuristic-server imagery'],
+  [/futuristic city|cyberpunk|sci-?fi/i, 'cliche futurism'],
+  [/handshake|lightbulb|jigsaw|puzzle piece|rocket ship/i, 'cheesy metaphor'],
+];
+
+export function brandCheck(design) {
+  const flags = [];
+  const c = design.content;
+
+  if (design.theme !== 'ethara') {
+    flags.push(`theme is "${design.theme}", not the Ethara brand theme -- palette and typography will be off-brand`);
+  }
+  if (!design.altText) {
+    flags.push('no altText: the image-brief skill requires an accessible description');
+  }
+
+  const ch = c.chart;
+  if (ch && ch.series.length > 1 && !ch.ordered && design.theme === 'ethara') {
+    flags.push(
+      `chart has ${ch.series.length} unordered series, but the Ethara palette is a single hue family. ` +
+      'Validated: #C084FC vs #A855F7 measure normal-vision dE 11.0, below the 15 floor -- readers cannot ' +
+      'reliably tell them apart. Either set chart.ordered=true (if the series really are ordered, e.g. ' +
+      'tiers or stages, so an ordinal ramp is honest), split into small multiples, or accept off-brand hues.'
+    );
+  }
+  if (ch && ch.series.length > 4 && design.theme === 'ethara') {
+    flags.push(`chart has ${ch.series.length} series; the Ethara ordinal ramp has only 4 distinguishable steps`);
+  }
+
+  const prompt = design.background?.prompt || '';
+  for (const [re, label] of FORBIDDEN_IMAGERY) {
+    if (re.test(prompt)) flags.push(`background prompt contains forbidden imagery: ${label}`);
+  }
+
+  return flags;
 }
 
 export function validateDesign(input) {

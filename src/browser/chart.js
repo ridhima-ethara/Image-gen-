@@ -17,7 +17,15 @@
   function u() { return parseFloat(tok('--u')) || 1; }
   function px(n) { return n * u(); }
 
-  function palette() {
+  function palette(spec) {
+    /* An ORDERED series set (tiers, stages, buckets) may be encoded by a
+       single-hue ordinal ramp -- that is what makes a one-family brand
+       palette legitimate here rather than an anti-pattern. Unordered
+       categories still need distinct hues and are flagged upstream. */
+    if (spec && spec.ordered && tok('--ordinal-1')) {
+      const ramp = [1, 2, 3, 4].map(i => tok('--ordinal-' + i)).filter(Boolean);
+      if (ramp.length) return Array.from({ length: 8 }, (_, i) => ramp[i % ramp.length]);
+    }
     return [1, 2, 3, 4, 5, 6, 7, 8].map(i => tok('--series-' + i));
   }
 
@@ -37,7 +45,7 @@
 
   function baseText(size, color, weight) {
     return {
-      fontFamily: 'Inter, sans-serif',
+      fontFamily: tok('--font-body') || 'Inter, sans-serif',
       fontSize: px(size),
       fontWeight: weight || 500,
       color: color,
@@ -140,7 +148,7 @@
 
   function build(spec, ctx) {
     const plotW = (ctx && ctx.width) || 900;
-    const colors = palette();
+    const colors = palette(spec);
     const policy = labelPolicy(spec);
     const surface = tok('--surface-1');
     const horizontal = spec.type === 'hbar';
@@ -228,7 +236,7 @@
       animation: false,
       backgroundColor: 'transparent',
       color: colors,
-      textStyle: { fontFamily: 'Inter, sans-serif' },
+      textStyle: { fontFamily: tok('--font-body') || 'Inter, sans-serif' },
       grid: {
         left: px(16), right: px(56), bottom: px(6),
         /* Reserve headroom for whichever chrome sits above the plot --
@@ -250,7 +258,7 @@
     return {
       animation: false,
       backgroundColor: 'transparent',
-      textStyle: { fontFamily: 'Inter, sans-serif' },
+      textStyle: { fontFamily: tok('--font-body') || 'Inter, sans-serif' },
       series: [{
         type: 'pie',
         radius: ['52%', '76%'],

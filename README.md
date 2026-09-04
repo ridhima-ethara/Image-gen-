@@ -29,6 +29,21 @@ Brief ──► LLM (schema-constrained) ──► validated Design JSON
               PNG up to 8K  +  vector PDF
 ```
 
+## Ethara brand mode
+
+`theme` defaults to `ethara` and `canvas` to `portrait`. The brand system (Ethara
+Purple family, Roboto display / DM Sans body, platform placements, forbidden stock
+imagery, required alt text, A/B options) is enforced per the `image-brief` skill.
+
+**Read [BRAND.md](BRAND.md) first** — it documents rule-by-rule compliance and one
+genuine conflict in the skill that needs a human decision: a single hue family
+cannot encode unordered chart categories, and the pipeline flags that rather than
+silently adding off-brand hues.
+
+```bash
+python3 generate.py --placement linkedin-portrait --options 2 --out 4k
+```
+
 ## Quick start
 
 ```bash

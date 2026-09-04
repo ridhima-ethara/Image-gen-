@@ -2,6 +2,10 @@ import fs from 'node:fs/promises';
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
 const DIR = 'assets/fonts';
 const families = [
+  /* Ethara brand faces: Roboto for display, DM Sans for body. */
+  { key: 'roboto', q: 'Roboto:wght@100..900' },
+  { key: 'dmsans', q: 'DM+Sans:opsz,wght@9..40,100..1000' },
+  /* Neutral fallback system for non-brand work. */
   { key: 'inter', q: 'Inter:wght@100..900' },
   { key: 'sourceserif4', q: 'Source+Serif+4:opsz,wght@8..60,200..900' },
 ];

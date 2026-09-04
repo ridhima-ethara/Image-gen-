@@ -72,6 +72,7 @@ for (const [i, d] of designs.entries()) {
     const r = await render(d, { output: args.out, outDir: args.dir, name, pdf: args.pdf, strict: args.strict });
     console.error(`  -> ${r.png}  ${r.width}x${r.height}`);
     if (r.pdf) console.error(`  -> ${r.pdf}`);
+    if (r.alt) console.error(`  -> ${r.alt}`);
     console.log(r.png);
   } catch (e) {
     failed++;

@@ -21,6 +21,10 @@
   /* --- type ------------------------------------------------ */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  /* Role tokens -- a theme swaps its whole type system by overriding
+     these two. Templates never name a face directly. */
+  --font-display: var(--font-sans);
+  --font-body: var(--font-sans);
 
   --fs-eyebrow:  calc(22px * var(--u));
   --fs-body:     calc(28px * var(--u));
@@ -180,6 +184,84 @@
 
   --scrim-from: rgba(10, 10, 10, 0.95);
   --scrim-to:   rgba(10, 10, 10, 0.38);
+  color-scheme: dark;
+}
+
+
+/* ============================================================
+   THEME: ethara -- Ethara.AI brand system
+   Governed by the image-brief skill. Do not add hues here.
+
+   Palette is the confirmed Ethara Purple family ONLY:
+     Ethara Purple #8B2CF5 · Deep Purple #5E1BC7
+     Bright Purple #A855F7 · Glow Purple #C084FC
+
+   VALIDATED (dataviz validator, surface #0b0714):
+     - as a CATEGORICAL palette it FAILS: #C084FC vs #A855F7 measure
+       normal-vision dE 11.0, under the 15 floor. A single-hue family
+       physically cannot encode unordered categories.
+     - as an ORDINAL ramp it PASSES every check (monotone lightness,
+       adjacent dL >= 0.06, 15 deg hue spread).
+   So: one series -> brand purple; ORDERED series -> the ramp below;
+   unordered multi-series -> flagged as off-brand, never silently
+   recoloured (skill rule 12 / Constitution VII).
+
+   --accent is Glow Purple, not Ethara Purple: #8B2CF5 as small text
+   measures 2.74:1 over a lit mesh region, well under 4.5:1.
+   ============================================================ */
+[data-theme='ethara'] {
+  --font-display: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --surface-0: #07040f;
+  --surface-1: #0b0714;
+  --surface-2: #140d24;
+  --surface-3: #1e1436;
+
+  --text-primary:   #ffffff;
+  --text-secondary: #c9c2d8;
+  --text-muted:     #9d94b4;   /* 5.32:1 over the lightest mesh blob */
+  --text-on-accent: #ffffff;
+
+  --accent:      #C084FC;      /* Glow Purple -- 5.77:1 over lit mesh */
+  --accent-soft: rgba(139, 44, 245, 0.16);
+  --hairline:    rgba(255, 255, 255, 0.11);
+  --grid:        rgba(255, 255, 255, 0.08);
+
+  /* One series -> Bright Purple. It clears 3:1 for marks on both the
+     flat surface (5.03) and a lit mesh region (3.85); Ethara Purple
+     itself drops to 2.74 on mesh and is reserved for chrome. */
+  --series-1: #A855F7;
+
+  /* ORDINAL ramp, dark surface: value rises with brightness so the
+     largest step is the most visible. Slots 2-4 exist only so an
+     ordered series set has steps -- they are NOT categorical slots. */
+  --series-2: #C084FC;
+  --series-3: #8B2CF5;
+  --series-4: #5E1BC7;
+  --series-5: #A855F7;
+  --series-6: #C084FC;
+  --series-7: #8B2CF5;
+  --series-8: #5E1BC7;
+
+  --ordinal-1: #5E1BC7;
+  --ordinal-2: #8B2CF5;
+  --ordinal-3: #A855F7;
+  --ordinal-4: #C084FC;
+
+  --seq-100: #E9D5FF; --seq-250: #C084FC; --seq-400: #A855F7;
+  --seq-550: #8B2CF5; --seq-700: #5E1BC7;
+
+  /* The brand forbids non-family hues, and the dataviz rules forbid
+     carrying direction by hue alone. Both are satisfied by dropping
+     red/green entirely: the arrow glyph and the label carry direction. */
+  --status-good-text:     #C084FC;
+  --status-critical-text: #C084FC;
+
+  --area-wash: 0.18;
+
+  --scrim-from: rgba(7, 4, 15, 0.94);
+  --scrim-to:   rgba(7, 4, 15, 0.34);
   color-scheme: dark;
 }
 

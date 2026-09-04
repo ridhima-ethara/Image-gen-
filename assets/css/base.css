@@ -11,7 +11,7 @@ body {
   width: var(--canvas-w);
   height: var(--canvas-h);
   overflow: hidden;
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   color: var(--text-primary);
@@ -95,6 +95,7 @@ body {
 /* ---- type primitives --------------------------------------- */
 
 .eyebrow {
+  font-family: var(--font-display);
   font-size: var(--fs-eyebrow);
   font-weight: 600;
   letter-spacing: var(--ls-eyebrow);
@@ -106,6 +107,7 @@ body {
 }
 
 .title {
+  font-family: var(--font-display);
   font-size: var(--fs-h1);
   font-weight: 700;
   letter-spacing: var(--ls-h1);
@@ -213,6 +215,7 @@ body {
 .stat { display: flex; flex-direction: column; gap: var(--gap-xs); min-width: 0; }
 
 .stat__value {
+  font-family: var(--font-display);
   font-size: var(--fs-display);
   font-weight: 680;
   letter-spacing: var(--ls-display);
@@ -299,8 +302,9 @@ body {
   display: flex; flex-direction: column; gap: var(--gap-sm);
   min-width: 0;
 }
-.card__value { font-size: var(--fs-h1); font-weight: 680; letter-spacing: var(--ls-h1); line-height: 1; font-variant-numeric: proportional-nums; }
-.card__title { font-size: var(--fs-h3); font-weight: 620; line-height: var(--lh-snug); letter-spacing: -0.01em; }
+.card__value {
+  font-family: var(--font-display); font-size: var(--fs-h1); font-weight: 680; letter-spacing: var(--ls-h1); line-height: 1; font-variant-numeric: proportional-nums; }
+.card__title { font-family: var(--font-display); font-size: var(--fs-h3); font-weight: 620; line-height: var(--lh-snug); letter-spacing: -0.01em; }
 .card__text  { font-size: var(--fs-body); color: var(--text-secondary); line-height: var(--lh-body); }
 
 .compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--gap-lg); align-items: stretch; }
@@ -316,7 +320,7 @@ body {
 }
 .step__dot { width: calc(14px * var(--u)); height: calc(14px * var(--u)); border-radius: 50%; background: var(--accent); flex: 0 0 auto; }
 .step__line { height: var(--rule); background: var(--hairline); flex: 1 1 auto; }
-.step__title { font-size: var(--fs-h3); font-weight: 620; line-height: var(--lh-snug); letter-spacing: -0.01em; }
+.step__title { font-family: var(--font-display); font-size: var(--fs-h3); font-weight: 620; line-height: var(--lh-snug); letter-spacing: -0.01em; }
 .step__text  { font-size: var(--fs-body); color: var(--text-secondary); line-height: var(--lh-body); }
 
 .flow { display: flex; align-items: stretch; gap: 0; }
@@ -335,6 +339,7 @@ body {
 .numlist { display: flex; flex-direction: column; gap: var(--gap-lg); }
 .numlist__item { display: grid; grid-template-columns: auto 1fr; gap: var(--gap-lg); align-items: start; }
 .numlist__n {
+  font-family: var(--font-display);
   font-size: var(--fs-h2); font-weight: 300; line-height: 1;
   color: var(--accent); font-variant-numeric: proportional-nums;
   min-width: calc(64px * var(--u));

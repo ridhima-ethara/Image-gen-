@@ -24,9 +24,18 @@ const CACHE = 'cache/backgrounds';
 
 /* FLUX will happily scribble fake words into a "clean" background.
    Say so explicitly, every time. */
+/* Two jobs. First, keep semantic content out of the image -- FLUX will
+   happily scribble fake words into a "clean" background. Second, enforce
+   the image-brief skill's forbidden visual direction: cliche AI stock
+   imagery is off-brand and must never be generated in the first place. */
 const GUARD =
   'no text, no words, no letters, no numbers, no typography, no charts, ' +
-  'no graphs, no logos, no watermark, no signature, no UI, no people';
+  'no graphs, no logos, no watermark, no signature, no UI, no people. ' +
+  'Absolutely no glowing brains, no humanoid robots, no neon circuit swirls, ' +
+  'no holographic faces, no generic server rooms or data centres, ' +
+  'no cyberpunk city, no handshakes or lightbulbs or puzzle pieces. ' +
+  'Clean, minimal, technical, research-forward. High signal-to-noise, ' +
+  'generous negative space, restrained engineered composition, not busy.';
 
 /* ---- deterministic mesh (free, instant, on-brand) --------------------- */
 
